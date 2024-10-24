@@ -108,3 +108,8 @@ nano $HADOOP_HOME/etc/hadoop/hadoop-env.sh
 ```
 export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64/bin/java
 ```
+
+```
+id: travelandi01@gmail.com
+pw: Ssafy10000
+```
