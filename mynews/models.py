@@ -1,11 +1,11 @@
-import uuid
+import datetime
 from django.db import models
+from pgvector.django import VectorField
 
 from mynews.enums import ArticleCategory, ArticleInteractionType
-from myproject import settings
 
 class Article(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False, unique=True)
+    id = models.AutoField(primary_key=True)
     title = models.CharField(max_length=200)
     writer = models.CharField(max_length=255)
     write_date = models.DateTimeField()
@@ -13,7 +13,7 @@ class Article(models.Model):
     content = models.TextField()
     url = models.URLField(max_length=200)
     keywords = models.JSONField(default=list)
-    embedding = models.BinaryField(default=b'\x00' * (1536 * 4))  # 1536 개의 float (4바이트) 벡터를 위한 기본값
+    embedding = VectorField(dimensions=1536)
 
     class Meta:
         indexes = [
@@ -27,6 +27,43 @@ class Article(models.Model):
             return cls.objects.all()[:limit]
         else:
             return cls.objects.filter(category=category)[:limit]
+        
+    @classmethod
+    def post_article(cls, title: str, writer: str, write_date: datetime.datetime, category: ArticleCategory, content: str, url: str, keywords: list[str], embedding: list[float]) -> "Article":
+        """
+        새로운 기사를 생성하고 데이터베이스에 저장합니다.
+
+        매개변수:
+        - title: 기사 제목
+        - writer: 작성자
+        - write_date: 작성 날짜
+        - category: 기사 카테고리
+        - content: 기사 내용
+        - url: 기사 URL
+        - keywords: 키워드 리스트
+        - embedding: 기사 임베딩 벡터
+
+        반환값:
+        - 생성된 Article 객체
+        """
+        print("url type: ", type(url))
+        print("url: ", url)
+        print("keywords type: ", type(keywords))
+        print("keywords: ", keywords[0])
+        print("embedding type: ", type(embedding))
+        print("embedding: ", embedding[0])
+
+        article = cls.objects.create(
+            title=title,
+            writer=writer,
+            write_date=write_date,
+            category=category,
+            content=content,
+            url=url,
+            keywords=keywords,
+            embedding=embedding
+        )
+        return article
 
 class UserPreference(models.Model):
     """
