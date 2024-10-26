@@ -35,6 +35,7 @@ CORS_ALLOW_ALL_ORIGINS = True
 # Application definition
 
 INSTALLED_APPS = [
+    # myapp
     "mynews.apps.MynewsConfig",
 
     "django.contrib.admin",
@@ -58,6 +59,9 @@ INSTALLED_APPS = [
 
     # Health Check
     'health_check',
+
+    # CORS
+    'corsheaders',
 ]
 
 MIDDLEWARE = [
