@@ -28,6 +28,9 @@ DEBUG = True
 
 ALLOWED_HOSTS = ["*"]
 
+# 모든 출처 허용 (개발 환경)
+CORS_ALLOW_ALL_ORIGINS = True
+
 
 # Application definition
 
