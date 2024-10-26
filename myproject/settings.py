@@ -52,6 +52,9 @@ INSTALLED_APPS = [
     'allauth',
     'allauth.account',
     'allauth.socialaccount',
+
+    # Health Check
+    'health_check',
 ]
 
 MIDDLEWARE = [

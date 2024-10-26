@@ -20,6 +20,7 @@ from django.urls import include, path
 from mynews.views import NewsView
 
 urlpatterns = [
+    path('health-check/', include('health_check.urls')),
     path("admin/", admin.site.urls),
     path("news-list/", NewsView.as_view()),
     path('auth/', include('dj_rest_auth.urls')),

@@ -14,6 +14,7 @@ dj-rest-auth = "^6.0.0"
 django-allauth = "^65.1.0"
 djangorestframework-simplejwt = "^5.3.1"
 requests = "^2.32.3"
+django-health-check = "^3.18.3"
 
 [tool.poetry.dev-dependencies]
 django-stubs = "^5.1.0"
