@@ -31,9 +31,7 @@ ALLOWED_HOSTS = ["*"]
 # 모든 출처 허용 (개발 환경)
 CORS_ALLOW_ALL_ORIGINS = True
 
-
 # Application definition
-
 INSTALLED_APPS = [
     # myapp
     "mynews.apps.MynewsConfig",
@@ -65,6 +63,10 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    # Cors 관련: 가능한 한 위에 추가
+    'corsheaders.middleware.CorsMiddleware',  
+    'django.middleware.common.CommonMiddleware',
+    
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
