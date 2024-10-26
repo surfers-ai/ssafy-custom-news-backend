@@ -21,19 +21,18 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-u#c=sa&yd=8ttml%v*-=!ddfc*sy#s@m1!yc$**vz_@802x+6$"
+SECRET_KEY = "django-insecure-k&tewfnqoy*i+o*9yw*!f)r02kz333fqnx99a(b)9xhg#-y8jh"
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ["*"]
 
 
 # Application definition
 
 INSTALLED_APPS = [
-    # 프로젝트 앱들
-    'api',
+    "mynews.apps.MynewsConfig",
 
     "django.contrib.admin",
     "django.contrib.auth",
@@ -41,18 +40,19 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    'django.contrib.sites',
 
-    # 서드파티 앱들
+    # REST Framework
     'rest_framework',
     'rest_framework.authtoken',
+
+    # Authentication
     'dj_rest_auth',
     'dj_rest_auth.registration',
-    'django.contrib.sites',
     'allauth',
     'allauth.account',
     'allauth.socialaccount',
 ]
-
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -90,9 +90,13 @@ WSGI_APPLICATION = "myproject.wsgi.application"
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
 DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'news',
+        'USER': 'postgres',
+        'PASSWORD': 'new_password',
+        'HOST': 'localhost',
+        'PORT': 5432
     }
 }
 
@@ -138,30 +142,32 @@ STATIC_URL = "static/"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-REST_FRAMEWORK = {
-    'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.AllowAny',
-    ],
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
-    ),
-    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 10
-}
-
-
-# Auth 관련
-AUTH_USER_MODEL = 'api.User'
-
+# 사이트 식별자
 SITE_ID = 1
 
-ACCOUNT_USER_MODEL_USERNAME_FIELD = None # username 필드 사용 x
-ACCOUNT_EMAIL_REQUIRED = True            # email 필드 사용 o
-ACCOUNT_USERNAME_REQUIRED = False        # username 필드 사용 x
+# 이메일 설정
+ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_UNIQUE_EMAIL = True
+ACCOUNT_USERNAME_REQUIRED = True
 ACCOUNT_AUTHENTICATION_METHOD = 'email'
+ACCOUNT_EMAIL_VERIFICATION = 'none'  # 'none' 또는 'optional' 설정 가능
 
-ACCOUNT_EMAIL_VERIFICATION = 'none' # 회원가입 과정에서 이메일 인증 사용 X
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    )
+}
 
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',
+    'allauth.account.auth_backends.AuthenticationBackend',
+]
+
+REST_AUTH = {
+    'USE_JWT': True,
+    'JWT_AUTH_COOKIE': 'my-app-auth',
+    'JWT_AUTH_REFRESH_COOKIE': 'my-refresh-token',
+}
 
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(days=1),
@@ -170,17 +176,4 @@ SIMPLE_JWT = {
     'BLACKLIST_AFTER_ROTATION': True,
     'AUTH_HEADER_TYPES': ('Bearer',),
     'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),
-}
-
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-
-AUTHENTICATION_BACKENDS = (
-    'django.contrib.auth.backends.ModelBackend',
-    'allauth.account.auth_backends.AuthenticationBackend',
-)
-
-REST_AUTH = {
-    'USE_JWT': True,
-    'JWT_AUTH_COOKIE': 'my-app-auth',
-    'JWT_AUTH_REFRESH_COOKIE': 'my-refresh-token',
 }
