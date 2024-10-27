@@ -8,7 +8,9 @@ echo "Completed!"
 
 echo "2. Starting the new process..."
 
-gunicorn myproject.wsgi:application --bind 0.0.0.0:8000 --workers 2 --daemon
+gunicorn myproject.wsgi:application --bind 0.0.0.0:8000 --workers 2 --daemon \
+    --access-logfile log/access.log \
+    --error-logfile log/error.log
 
 if [ $? -eq 0 ]; then
     echo "Server started successfully!"
