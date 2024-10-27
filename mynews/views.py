@@ -68,10 +68,7 @@ class ArticleView(APIView):
                 status=200,
             )
         except Article.DoesNotExist:
-            return Response(
-                {"message": "기사를 찾을 수 없습니다."},
-                status=404
-            )
+            return Response({"message": "기사를 찾을 수 없습니다."}, status=404)
 
 
 class WriteArticleView(APIView):
@@ -81,7 +78,7 @@ class WriteArticleView(APIView):
         if not serializer.is_valid():
             return Response(
                 {"message": "잘못된 요청 데이터입니다.", "errors": serializer.errors},
-                status=status.HTTP_400_BAD_REQUEST
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
         # 유효한 데이터로 기사 생성
@@ -132,7 +129,7 @@ class ChatbotView(APIView):
         except Article.DoesNotExist:
             return Response(
                 {"message": "해당 기사를 찾을 수 없습니다."},
-                status=status.HTTP_404_NOT_FOUND
+                status=status.HTTP_404_NOT_FOUND,
             )
 
         # 템플릿 정의
@@ -157,7 +154,9 @@ class ChatbotView(APIView):
         )
 
         # 템플릿에 변수 적용
-        context = rag_article_prompt.format(title=title, write_date=write_date, content=content)
+        context = rag_article_prompt.format(
+            title=title, write_date=write_date, content=content
+        )
 
         completion = (
             self.client.chat.completions.create(
@@ -202,22 +201,17 @@ class LikeArticleView(APIView):
         if not request.user.is_authenticated:
             return self.unauthorized_response()
 
-        # 사용자-기사 상호작용 생성 또는 조회
-        interaction, created = UserArticleInteraction.objects.get_or_create(
-            user=request.user.preferences,
-            article=article,
-            defaults={'interaction_type': ArticleInteractionType.LIKE}
-        )
+        if UserArticleInteraction.is_liked_by_user(request.user, article):
+            return self.like_already_exists_response()
 
-        # 새로운 좋아요 추가 시 응답
-        if created:
+        # 사용자-기사 상호작용 생성
+        interaction = UserArticleInteraction.create_like(request.user, article)
+
+        if interaction:
+            # 새로운 좋아요 추가 시 응답
             return self.like_added_response()
-
-        # 이미 존재하는 상호작용이면 400 Bad Request 반환
-        return Response(
-            {"message": "이미 좋아요를 누른 기사입니다."},
-            status=status.HTTP_400_BAD_REQUEST
-        )
+        else:
+            return self.like_already_exists_response()
 
     def delete(self, request: Request) -> Response:
         # 요청 데이터 유효성 검사
@@ -236,16 +230,30 @@ class LikeArticleView(APIView):
         if not request.user.is_authenticated:
             return self.unauthorized_response()
 
-        # 사용자-기사 상호작용 조회 및 삭제
-        try:
-            interaction = UserArticleInteraction.objects.get(
-                user=request.user.preferences,
-                article=article,
-                interaction_type=ArticleInteractionType.LIKE
-            )
-            interaction.delete()
-            return self.like_canceled_response()
-        except UserArticleInteraction.DoesNotExist:
+        if not UserArticleInteraction.is_liked_by_user(request.user, article):
+            return self.like_not_found_response()
+
+        UserArticleInteraction.delete_like(request.user, article)
+        return self.like_canceled_response()
+    
+    def get(self, request: Request) -> Response:
+        # 해당 ID의 좋아요를 눌렀는지 확인
+        if not request.user.is_authenticated:
+            return self.unauthorized_response()
+
+        serializer = ArticleLikeSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        article_id = serializer.validated_data["article_id"]
+
+        article = self.get_article(article_id)
+
+        if not article:
+            return self.article_not_found_response()
+
+        if UserArticleInteraction.is_liked_by_user(request.user, article):
+            return self.like_found_response()
+        else:
             return self.like_not_found_response()
 
     def get_article(self, article_id):
@@ -257,29 +265,37 @@ class LikeArticleView(APIView):
     def article_not_found_response(self):
         return Response(
             {"message": "해당 기사를 찾을 수 없습니다."},
-            status=status.HTTP_404_NOT_FOUND
+            status=status.HTTP_404_NOT_FOUND,
         )
 
     def unauthorized_response(self):
         return Response(
-            {"message": "로그인이 필요합니다."},
-            status=status.HTTP_401_UNAUTHORIZED
+            {"message": "로그인이 필요합니다."}, status=status.HTTP_401_UNAUTHORIZED
         )
 
     def like_canceled_response(self):
         return Response(
-            {"message": "기사의 좋아요를 취소했습니다."},
-            status=status.HTTP_200_OK
+            {"message": "기사의 좋아요를 취소했습니다."}, status=status.HTTP_200_OK
         )
 
     def like_added_response(self):
         return Response(
-            {"message": "기사에 좋아요를 눌렀습니다."},
-            status=status.HTTP_200_OK
+            {"message": "기사에 좋아요를 눌렀습니다."}, status=status.HTTP_200_OK
         )
     
+    def like_found_response(self):
+        return Response(
+            {"message": "좋아요를 누른 기사입니다."}, status=status.HTTP_200_OK
+        )
+
     def like_not_found_response(self):
         return Response(
             {"message": "좋아요를 누르지 않은 기사입니다."},
-            status=status.HTTP_400_BAD_REQUEST
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    def like_already_exists_response(self):
+        return Response(
+            {"message": "이미 좋아요를 누른 기사입니다."},
+            status=status.HTTP_400_BAD_REQUEST,
         )

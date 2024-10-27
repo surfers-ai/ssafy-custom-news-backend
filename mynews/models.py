@@ -77,15 +77,8 @@ class Preference(models.Model):
     기본 사용자 정보(이메일, 이름 등)는 auth_user 테이블 사용
     """
 
-    user = models.OneToOneField(
-        "auth.User", on_delete=models.CASCADE, related_name="preferences"
-    )
+    user = models.OneToOneField("auth.User", on_delete=models.CASCADE)
     user_embedding = VectorField(dimensions=1536)
-
-    class Meta:
-        indexes = [
-            models.Index(fields=["user_id"], name="user_id_index"),
-        ]
 
 
 class UserArticleInteraction(models.Model):
@@ -93,3 +86,45 @@ class UserArticleInteraction(models.Model):
     article = models.ForeignKey(Article, on_delete=models.CASCADE)
     interaction_type = models.CharField(choices=ArticleInteractionType.choices)
     interaction_date = models.DateTimeField()
+
+    @classmethod
+    def create_like(cls, user, article) -> "UserArticleInteraction":
+        """
+        사용자가 기사에 좋아요를 누를 때 새로운 상호작용을 생성합니다.
+
+        매개변수:
+        - user: 좋아요를 누른 사용자 객체
+        - article: 좋아요를 받은 기사 객체
+
+        반환값:
+        - 생성된 UserArticleInteraction 객체
+        """
+        interaction = cls.objects.create(
+            user=user,
+            article=article,
+            interaction_type=ArticleInteractionType.LIKE,
+            interaction_date=datetime.datetime.now(),
+        )
+        return interaction
+
+    @classmethod
+    def delete_like(cls, user, article) -> None:
+        cls.objects.filter(
+            user=user, article=article, interaction_type=ArticleInteractionType.LIKE
+        ).delete()
+
+    @classmethod
+    def is_liked_by_user(cls, user, article) -> bool:
+        """
+        사용자가 특정 기사에 좋아요를 눌렀는지 확인합니다.
+
+        매개변수:
+        - user: 확인할 사용자 객체
+        - article: 확인할 기사 객체
+
+        반환값:
+        - bool: 사용자가 해당 기사에 좋아요를 눌렀으면 True, 아니면 False
+        """
+        return cls.objects.filter(
+            user=user, article=article, interaction_type=ArticleInteractionType.LIKE
+        ).exists()
