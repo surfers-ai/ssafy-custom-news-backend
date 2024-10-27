@@ -4,6 +4,7 @@ from pgvector.django import VectorField
 
 from mynews.enums import ArticleCategory, ArticleInteractionType
 
+
 class Article(models.Model):
     id = models.AutoField(primary_key=True)
     title = models.CharField(max_length=200)
@@ -16,20 +17,30 @@ class Article(models.Model):
     embedding = VectorField(dimensions=1536)
 
     class Meta:
-        indexes = [
-            models.Index(fields=['id'], name='unique_article_id')
-        ]
+        indexes = [models.Index(fields=["id"], name="unique_article_id")]
 
     @classmethod
-    def get_article_list(cls, category: ArticleCategory, limit: int = 10) -> list["Article"]:
+    def get_article_list(
+        cls, category: ArticleCategory, limit: int = 10
+    ) -> list["Article"]:
         print("category: ", category)
         if category == ArticleCategory.전체:
             return cls.objects.all()[:limit]
         else:
             return cls.objects.filter(category=category)[:limit]
-        
+
     @classmethod
-    def post_article(cls, title: str, writer: str, write_date: datetime.datetime, category: ArticleCategory, content: str, url: str, keywords: list[str], embedding: list[float]) -> "Article":
+    def post_article(
+        cls,
+        title: str,
+        writer: str,
+        write_date: datetime.datetime,
+        category: ArticleCategory,
+        content: str,
+        url: str,
+        keywords: list[str],
+        embedding: list[float],
+    ) -> "Article":
         """
         새로운 기사를 생성하고 데이터베이스에 저장합니다.
 
@@ -55,21 +66,22 @@ class Article(models.Model):
             content=content,
             url=url,
             keywords=keywords,
-            embedding=embedding
+            embedding=embedding,
         )
         return article
+
 
 class UserPreference(models.Model):
     """
     User의 확장 모델 - 뉴스 추천을 위한 추가 정보 저장
     기본 사용자 정보(이메일, 이름 등)는 auth_user 테이블 사용
     """
+
     user = models.OneToOneField(
-        'auth.User',
-        on_delete=models.CASCADE,
-        related_name='preferences'
+        "auth.User", on_delete=models.CASCADE, related_name="preferences"
     )
     user_embedding = VectorField(dimensions=1536)
+
 
 class UserArticleInteraction(models.Model):
     user = models.ForeignKey(UserPreference, on_delete=models.CASCADE)

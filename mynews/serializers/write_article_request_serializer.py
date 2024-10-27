@@ -2,6 +2,7 @@ from rest_framework import serializers
 
 from mynews.enums import ArticleCategory
 
+
 class WriteArticleRequestSerializer(serializers.Serializer):
     title = serializers.CharField(max_length=200)
     writer = serializers.CharField(max_length=255)
