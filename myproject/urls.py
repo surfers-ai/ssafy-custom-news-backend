@@ -34,8 +34,9 @@ urlpatterns = [
     path("auth/registration/", include("dj_rest_auth.registration.urls")),
     # news
     path("news-list/", NewsListView.as_view()),
-    path("news-detail/<int:article_id>/", ArticleView.as_view()),
+    path("news/<int:article_id>/", ArticleView.as_view()),
     path("write-article/", WriteArticleView.as_view()),
-    path("chat/", ChatbotView.as_view()),
+    # dashboard
     path("dashboard/", DashboardView.as_view()),
+    path("news/chat/", ChatbotView.as_view()),
 ]
