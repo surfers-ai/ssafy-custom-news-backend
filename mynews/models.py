@@ -40,14 +40,17 @@ class Article(models.Model):
         if not user_interactions.exists():
             return cls.get_article_list(category, limit)  # 상호작용이 없으면 카테고리별 기사 반환
 
-        avg_embedding = user_interactions.aggregate(Avg('article__embedding'))['article__embedding__avg']
-
-        print("avg_embedding: ", avg_embedding)
+        avg_embedding = user_interactions.filter(interaction_type=ArticleInteractionType.LIKE).aggregate(Avg('article__embedding'))['article__embedding__avg']
 
         # 코사인 유사도가 높은 상위 기사 추출
-        recommended_articles = cls.objects.filter(category=category).order_by(
-            CosineDistance('embedding', avg_embedding)
-        )[:limit]
+        if category == ArticleCategory.전체:
+            recommended_articles = cls.objects.order_by(
+                CosineDistance('embedding', avg_embedding)
+            )[:limit]
+        else:
+            recommended_articles = cls.objects.filter(category=category).order_by(
+                CosineDistance('embedding', avg_embedding)
+            )[:limit]
 
         if recommended_articles.count() < limit:
             # 추천된 기사가 limit보다 적으면 카테고리별 기사로 채움

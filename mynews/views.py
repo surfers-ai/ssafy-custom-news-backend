@@ -208,8 +208,8 @@ class LikeArticleView(APIView):
         # 사용자-기사 상호작용 생성
         interaction = UserArticleInteraction.create_like(request.user, article)
 
-        if interaction:
-            # 새로운 좋아요 추가 시 응답
+        if interaction:  # 새로운 좋아요 추가 시 응답
+            # 사용자 선호도 업데이트
             return self.like_added_response()
         else:
             return self.like_already_exists_response()
