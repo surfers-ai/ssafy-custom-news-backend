@@ -18,7 +18,13 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import include, path
 
-from mynews.views import ChatbotView, NewsListView, ArticleView, WriteArticleView
+from mynews.views import (
+    ChatbotView,
+    DashboardView,
+    NewsListView,
+    ArticleView,
+    WriteArticleView,
+)
 
 urlpatterns = [
     path("health-check/", include("health_check.urls")),
@@ -31,4 +37,5 @@ urlpatterns = [
     path("news-detail/<int:article_id>/", ArticleView.as_view()),
     path("write-article/", WriteArticleView.as_view()),
     path("chat/", ChatbotView.as_view()),
+    path("dashboard/", DashboardView.as_view()),
 ]

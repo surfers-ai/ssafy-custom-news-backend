@@ -12,6 +12,8 @@ from mynews.serializers.write_article_request_serializer import (
     WriteArticleRequestSerializer,
 )
 
+from mynews.mocking import dashboard_mock
+
 from openai import OpenAI
 from dotenv import load_dotenv
 
@@ -143,4 +145,11 @@ class ChatbotView(APIView):
             {"message": "호출 성공", "history": completion},
             status=200,
             json_dumps_params={"ensure_ascii": False},
+        )
+
+
+class DashboardView(APIView):
+    def get(self, request: Request) -> JsonResponse:
+        return JsonResponse(
+            {"message": "호출 성공", "data": dashboard_mock}, status=200
         )
