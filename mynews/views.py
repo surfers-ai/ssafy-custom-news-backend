@@ -123,13 +123,34 @@ class ChatbotView(APIView):
 
         print(article_id, question)
 
+        try:
+            article = Article.objects.get(id=article_id)
+            title = article.title
+            content = article.content
+            write_date = article.write_date
+        except Article.DoesNotExist:
+            return Response(
+                {"message": "해당 기사를 찾을 수 없습니다."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        # 질문에 기사 제목, 내용, 날짜 추가
+        context = f"### 기사 제목: {title}\n\n### 작성일: {write_date}\n\n### 기사 내용:\n{content}"
+
         completion = (
             self.client.chat.completions.create(
                 model="gpt-4o-mini",
                 messages=[
                     {
                         "role": "system",
-                        "content": "너는 친절한 친구야. 너는 사용자에게 친절하게 답변해야해.",
+                        "content": f"""너는 친절한 뉴스 비서 <뉴비>야. 뉴비는 News(뉴스) + 비서의 합성어로, 초심사(newbie)라는 중의적인 의미도 갖고 있어.
+- 친근하고 상냥한 비서처럼 행동하면서, 주어진 뉴스 기사를 바탕으로 사용자의 질문에 아주 쉽고 친절하게 답해줘야 해.
+- 뉴스 기사에서 찾을 수 없는 정보는 "죄송해요, 여기 보고계신 기사에서는 찾을 수 없네요ㅎㅎ"라고 답해줘.
+
+사용자가 지금 보고 있는 뉴스를 참고해서 답변할 수 있는 질문에는 친절하게 답해줘.
+
+{context}
+""",
                     },
                     {"role": "user", "content": question},
                 ],
