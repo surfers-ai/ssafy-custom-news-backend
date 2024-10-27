@@ -21,6 +21,7 @@ from django.urls import include, path
 from mynews.views import (
     ChatbotView,
     DashboardView,
+    LikeArticleView,
     NewsListView,
     ArticleView,
     WriteArticleView,
@@ -36,7 +37,10 @@ urlpatterns = [
     path("news-list/", NewsListView.as_view()),
     path("news/<int:article_id>/", ArticleView.as_view()),
     path("write-article/", WriteArticleView.as_view()),
+    # like article
+    path("news/like/", LikeArticleView.as_view()),
     # dashboard
     path("dashboard/", DashboardView.as_view()),
+    # chat with news
     path("news/chat/", ChatbotView.as_view()),
 ]

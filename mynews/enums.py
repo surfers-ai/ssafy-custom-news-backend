@@ -23,5 +23,5 @@ class ArticleCategory(models.TextChoices):
 
 
 class ArticleInteractionType(models.TextChoices):
-    좋아요 = "좋아요", "좋아요"
-    읽음 = "읽음", "읽음"
+    LIKE = "like", "Like"
+    READ = "read", "Read"

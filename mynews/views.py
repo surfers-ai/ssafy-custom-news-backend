@@ -2,7 +2,8 @@ from django.http import JsonResponse
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from mynews.models import Article
+from mynews.enums import ArticleInteractionType
+from mynews.models import Article, UserArticleInteraction
 from mynews.serializers.dto.article_like_request_serializer import ArticleLikeSerializer
 from mynews.serializers.dto.article_response_serializer import ArticleResponseSerializer
 from mynews.serializers.dto.newslist_request_serializer import NewslistRequestSerializer
@@ -185,17 +186,100 @@ class DashboardView(APIView):
 
 class LikeArticleView(APIView):
     def post(self, request: Request) -> Response:
+        # 요청 데이터 유효성 검사
         serializer = ArticleLikeSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
+        # 유효한 데이터에서 article_id 추출
         article_id = serializer.validated_data["article_id"]
 
-        # TODO: 좋아요 로직 구현
-        print(article_id)
+        # 해당 ID의 기사 조회
+        article = self.get_article(article_id)
+        if not article:
+            return self.article_not_found_response()
 
+        # 사용자 인증 확인
+        if not request.user.is_authenticated:
+            return self.unauthorized_response()
+
+        # 사용자-기사 상호작용 생성 또는 조회
+        interaction, created = UserArticleInteraction.objects.get_or_create(
+            user=request.user.preferences,
+            article=article,
+            defaults={'interaction_type': ArticleInteractionType.LIKE}
+        )
+
+        # 새로운 좋아요 추가 시 응답
+        if created:
+            return self.like_added_response()
+
+        # 이미 존재하는 상호작용이면 400 Bad Request 반환
         return Response(
-            {
-                "message": "기사에 좋아요를 눌렀습니다."
-            },
-            status=status.HTTP_200_OK,
+            {"message": "이미 좋아요를 누른 기사입니다."},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    def delete(self, request: Request) -> Response:
+        # 요청 데이터 유효성 검사
+        serializer = ArticleLikeSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        # 유효한 데이터에서 article_id 추출
+        article_id = serializer.validated_data["article_id"]
+
+        # 해당 ID의 기사 조회
+        article = self.get_article(article_id)
+        if not article:
+            return self.article_not_found_response()
+
+        # 사용자 인증 확인
+        if not request.user.is_authenticated:
+            return self.unauthorized_response()
+
+        # 사용자-기사 상호작용 조회 및 삭제
+        try:
+            interaction = UserArticleInteraction.objects.get(
+                user=request.user.preferences,
+                article=article,
+                interaction_type=ArticleInteractionType.LIKE
+            )
+            interaction.delete()
+            return self.like_canceled_response()
+        except UserArticleInteraction.DoesNotExist:
+            return self.like_not_found_response()
+
+    def get_article(self, article_id):
+        try:
+            return Article.objects.get(id=article_id)
+        except Article.DoesNotExist:
+            return None
+
+    def article_not_found_response(self):
+        return Response(
+            {"message": "해당 기사를 찾을 수 없습니다."},
+            status=status.HTTP_404_NOT_FOUND
+        )
+
+    def unauthorized_response(self):
+        return Response(
+            {"message": "로그인이 필요합니다."},
+            status=status.HTTP_401_UNAUTHORIZED
+        )
+
+    def like_canceled_response(self):
+        return Response(
+            {"message": "기사의 좋아요를 취소했습니다."},
+            status=status.HTTP_200_OK
+        )
+
+    def like_added_response(self):
+        return Response(
+            {"message": "기사에 좋아요를 눌렀습니다."},
+            status=status.HTTP_200_OK
+        )
+    
+    def like_not_found_response(self):
+        return Response(
+            {"message": "좋아요를 누르지 않은 기사입니다."},
+            status=status.HTTP_400_BAD_REQUEST
         )
