@@ -34,21 +34,22 @@ class NewsListView(APIView):
         category = serializer.validated_data.get("category")
         limit = serializer.validated_data.get("limit")
 
-        queryset = Article.get_article_list(category, limit)
-
-        user_email = request.user.email if request.user.is_authenticated else None
-
         # 비로그인 상태
-        if user_email is None:
+        if not request.user.is_authenticated:
+            queryset = Article.get_article_list(category, limit)
             serializer = ArticleSerializer(queryset, many=True)
+
             return Response(
                 {"message": "호출 성공, 비로그인 상태", "data": serializer.data},
                 status=200,
             )
         # 로그인 상태
         else:
+            queryset = Article.get_recommendation_article_list(request.user.id, category, limit)
+            serializer = ArticleSerializer(queryset, many=True)
+
             return Response(
-                {"message": "곧 출시 예정!!! 추천 기사 추가 예정", "data": None},
+                {"message": "호출 성공, 로그인 상태", "data": serializer.data},
                 status=200,
             )
 
