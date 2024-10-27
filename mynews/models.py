@@ -46,12 +46,6 @@ class Article(models.Model):
         반환값:
         - 생성된 Article 객체
         """
-        print("url type: ", type(url))
-        print("url: ", url)
-        print("keywords type: ", type(keywords))
-        print("keywords: ", keywords[0])
-        print("embedding type: ", type(embedding))
-        print("embedding: ", embedding[0])
 
         article = cls.objects.create(
             title=title,
@@ -70,16 +64,12 @@ class UserPreference(models.Model):
     User의 확장 모델 - 뉴스 추천을 위한 추가 정보 저장
     기본 사용자 정보(이메일, 이름 등)는 auth_user 테이블 사용
     """
-    user_email = models.EmailField(unique=True)
     user = models.OneToOneField(
         'auth.User',
         on_delete=models.CASCADE,
         related_name='preferences'
     )
-    user_embedding = models.BinaryField(
-        default=b'\x00' * (1536 * 4),
-        help_text='사용자 관심사 임베딩 벡터'
-    )
+    user_embedding = VectorField(dimensions=1536)
 
 class UserArticleInteraction(models.Model):
     user = models.ForeignKey(UserPreference, on_delete=models.CASCADE)
