@@ -12,5 +12,5 @@ class RelatedArticlesSerializer(serializers.Serializer):
         # 코사인 유사도가 높은 상위 5개 기사 추출
         related_articles = Article.objects.order_by(
             CosineDistance("embedding", obj.embedding)
-        )[:5]
+        )[1:6]  # 자기 자신(첫 번째 기사)는 제외
         return [ArticleSerializer(article).data for article in related_articles]
