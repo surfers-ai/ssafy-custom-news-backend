@@ -28,9 +28,9 @@ class Article(models.Model):
     ) -> list["Article"]:
         print("category: ", category)
         if category == ArticleCategory.전체:
-            return cls.objects.all()[:limit]
+            return cls.objects.order_by('?')[:limit]
         else:
-            return cls.objects.filter(category=category)[:limit]
+            return cls.objects.filter(category=category).order_by('?')[:limit]
         
     @classmethod
     def get_recommendation_article_list(cls, user_id: int, category: ArticleCategory, limit: int = 10) -> list["Article"]:
