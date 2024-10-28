@@ -21,6 +21,8 @@ from mynews.mocking import dashboard_mock
 from openai import OpenAI
 from dotenv import load_dotenv
 
+from myproject.response import SUCCESS_RESPONSE
+
 load_dotenv()
 
 # https://www.django-rest-framework.org/tutorial/3-class-based-views/
@@ -39,35 +41,21 @@ class NewsListView(APIView):
             queryset = Article.get_article_list(category, limit)
             serializer = ArticleSerializer(queryset, many=True)
 
-            return Response(
-                {"message": "호출 성공, 비로그인 상태", "data": serializer.data},
-                status=200,
-            )
+            return SUCCESS_RESPONSE("호출 성공, 비로그인 상태", serializer.data)
         # 로그인 상태
         else:
             queryset = Article.get_recommendation_article_list(request.user.id, category, limit)
             serializer = ArticleSerializer(queryset, many=True)
 
-            return Response(
-                {"message": "호출 성공, 로그인 상태", "data": serializer.data},
-                status=200,
-            )
+            return SUCCESS_RESPONSE("호출 성공, 로그인 상태", serializer.data)
 
 
 class ArticleView(APIView):
     def get(self, request: Request, article_id: int) -> JsonResponse:
         try:
-            print("article_id", article_id)
-            print("!")
             article = Article.objects.get(id=article_id)
 
-            return Response(
-                {
-                    "message": "호출 성공",
-                    "data": ArticleResponseSerializer(article).data,
-                },
-                status=200,
-            )
+            return SUCCESS_RESPONSE("호출 성공", ArticleResponseSerializer(article).data)
         except Article.DoesNotExist:
             return Response({"message": "기사를 찾을 수 없습니다."}, status=404)
 
@@ -94,14 +82,7 @@ class WriteArticleView(APIView):
                 keywords=serializer.validated_data["keywords"],
                 embedding=serializer.validated_data["embedding"],
             )
-            return JsonResponse(
-                {
-                    "message": "기사가 성공적으로 생성되었습니다.",
-                    "data": ArticleSerializer(article).data,
-                },
-                status=201,
-                json_dumps_params={"ensure_ascii": False},
-            )
+            return SUCCESS_RESPONSE("기사가 성공적으로 생성되었습니다.", ArticleSerializer(article).data)
 
         except Exception as e:
             return Response(
@@ -171,17 +152,12 @@ class ChatbotView(APIView):
             .message.content
         )
 
-        return Response(
-            {"message": "호출 성공", "history": completion},
-            status=status.HTTP_200_OK,
-        )
+        return SUCCESS_RESPONSE("호출 성공", {"history": completion})
 
 
 class DashboardView(APIView):
     def get(self, request: Request) -> JsonResponse:
-        return JsonResponse(
-            {"message": "호출 성공", "data": dashboard_mock}, status=200
-        )
+        return SUCCESS_RESPONSE("호출 성공", dashboard_mock)
 
 
 class LikeArticleView(APIView):

@@ -1,4 +1,5 @@
 import datetime
+from typing import List
 from django.db import models
 from pgvector.django import VectorField
 
@@ -25,7 +26,7 @@ class Article(models.Model):
     @classmethod
     def get_article_list(
         cls, category: ArticleCategory, limit: int = 10
-    ) -> list["Article"]:
+    ) -> List["Article"]:
         print("category: ", category)
         if category == ArticleCategory.전체:
             return cls.objects.order_by('?')[:limit]
