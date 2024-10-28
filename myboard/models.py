@@ -1,0 +1,64 @@
+from datetime import datetime
+from typing import List
+from django.db import models
+from pgvector.django import VectorField
+from django.contrib.auth.models import User
+from openai import OpenAI
+from dotenv import load_dotenv
+
+load_dotenv()
+
+from myboard.enums import PostingCategory
+
+class Posting(models.Model):
+    id = models.AutoField(primary_key=True)
+    title = models.CharField(max_length=200)
+    writer = models.ForeignKey("auth.User", on_delete=models.CASCADE)
+    write_date = models.DateTimeField()
+    category = models.CharField(choices=PostingCategory.choices)
+    content = models.TextField()
+    keywords = models.JSONField(default=list)
+    embedding = VectorField(dimensions=1536)
+
+    @classmethod
+    def get_posting_list(cls, category: PostingCategory, limit: int) -> List['Posting']:
+        if category == PostingCategory.전체:
+            return cls.objects.order_by("-write_date")[:limit]
+        else:
+            return cls.objects.filter(category=category).order_by("-write_date")[:limit]
+    
+    @classmethod
+    def post_posting(cls, title: str, writer: User, category: PostingCategory, content: str, keywords: list[str]) -> int:
+        write_date = datetime.now()
+        embedding = cls.get_embedding(content)
+
+        posting = cls.objects.create(
+            title=title,
+            writer=writer,
+            write_date=write_date,
+            category=category,
+            content=content,
+            keywords=keywords,
+            embedding=embedding,
+        )
+        return posting.id
+
+
+    @classmethod
+    def get_embedding(cls, text: str) -> list[float]:
+        client = OpenAI()
+        response = client.embeddings.create(input=text, model="text-embedding-3-small")
+        return response.data[0].embedding
+
+class Comment(models.Model):
+    id = models.AutoField(primary_key=True)
+    posting = models.ForeignKey(Posting, on_delete=models.CASCADE, related_name="comments")
+    writer = models.ForeignKey("auth.User", on_delete=models.CASCADE)
+    write_date = models.DateTimeField()
+    content = models.TextField()
+
+    @classmethod
+    def post_comment(cls, posting_id: int, writer: User, content: str) -> 'Comment':
+        write_date = datetime.now()
+        comment = cls.objects.create(posting_id=posting_id, writer=writer, write_date=write_date, content=content)
+        return comment
