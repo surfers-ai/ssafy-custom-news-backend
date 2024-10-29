@@ -1,4 +1,5 @@
 import datetime
+import random
 from typing import List
 from django.db import models
 from pgvector.django import VectorField
@@ -53,10 +54,13 @@ class Article(models.Model):
                 CosineDistance('embedding', avg_embedding)
             )[:limit]
 
-        if recommended_articles.count() < limit:
+        recommended_articles = list(recommended_articles)
+        random.shuffle(recommended_articles)
+
+        if len(recommended_articles) < limit:
             # 추천된 기사가 limit보다 적으면 카테고리별 기사로 채움
-            additional_articles = cls.get_article_list(category, limit - recommended_articles.count())
-            recommended_articles = list(recommended_articles) + list(additional_articles)
+            additional_articles = cls.get_article_list(category, limit - len(recommended_articles))
+            recommended_articles = recommended_articles + additional_articles
 
         return recommended_articles
 

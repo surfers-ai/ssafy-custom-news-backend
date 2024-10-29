@@ -6,6 +6,8 @@ from mynews.serializers.article_interaction_serializer import (
 )
 
 
+import random
+
 class ArticleSerializer(serializers.ModelSerializer):
 
     article_interaction = UserArticleInteractionSerializer(source="*")
