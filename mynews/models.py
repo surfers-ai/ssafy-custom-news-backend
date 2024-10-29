@@ -119,16 +119,18 @@ class Article(models.Model):
         end_date = datetime.datetime.now().date()
         start_date = end_date - datetime.timedelta(days=6)
         
-        # 날짜별 기사 읽은 수를 집계
+        # 날짜별 기사 읽은 수를 집계 (중복 제거)
         daily_counts = (
             cls.objects.filter(
                 userarticleinteraction__user_id=user_id,
                 userarticleinteraction__interaction_type=ArticleInteractionType.READ,
-                write_date__date__range=(start_date, end_date)
+                userarticleinteraction__interaction_date__date__range=(start_date, end_date)
             )
-            .annotate(date=models.functions.TruncDate('write_date'))
-            .values('date')
-            .annotate(count=models.Count('id'))
+            .annotate(date=models.functions.TruncDate('userarticleinteraction__interaction_date'))
+            .values('date', 'id')  # article id도 함께 가져옴
+            .distinct()  # 같은 날짜, 같은 기사 중복 제거
+            .values('date')  # 날짜별로 그룹화
+            .annotate(count=models.Count('id', distinct=True))  # 중복 없이 카운트
             .order_by('date')
         )
         

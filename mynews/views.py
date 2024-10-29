@@ -56,6 +56,7 @@ class ArticleView(APIView):
         
         try:
             article = Article.objects.get(id=article_id)
+            UserArticleInteraction.create_read(request.user, article)
 
             return SUCCESS_RESPONSE("호출 성공", ArticleResponseSerializer(article).data)
         except Article.DoesNotExist:
@@ -244,10 +245,21 @@ class LikeArticleView(APIView):
         if not request.user.is_authenticated:
             return UNAUTHORIZED_RESPONSE()
 
-        serializer = ArticleLikeSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
+        # 쿼리 파라미터에서 article_id 추출
+        article_id = request.query_params.get('article_id')
+        if not article_id:
+            return Response(
+                {"message": "article_id는 필수 파라미터입니다."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
-        article_id = serializer.validated_data["article_id"]
+        try:
+            article_id = int(article_id)
+        except ValueError:
+            return Response(
+                {"message": "article_id는 숫자여야 합니다."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
         article = self.get_article(article_id)
 
@@ -283,13 +295,13 @@ class LikeArticleView(APIView):
     
     def like_found_response(self):
         return Response(
-            {"message": "좋아요를 누른 기사입니다."}, status=status.HTTP_200_OK
+            {"message": "좋아요를 누른 기사입니다.", "is_liked": True}, status=status.HTTP_200_OK
         )
 
     def like_not_found_response(self):
         return Response(
-            {"message": "좋아요를 누르지 않은 기사입니다."},
-            status=status.HTTP_400_BAD_REQUEST,
+            {"message": "좋아요를 누르지 않은 기사입니다.", "is_liked": False},
+            status=status.HTTP_200_OK,
         )
 
     def like_already_exists_response(self):
