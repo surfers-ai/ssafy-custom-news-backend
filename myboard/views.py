@@ -18,10 +18,6 @@ class BoardListView(APIView):
 
         category = serializer.validated_data.get("category")
         limit = serializer.validated_data.get("limit")
-
-        # 비로그인 상태
-        if not request.user.is_authenticated:
-            return UNAUTHORIZED_RESPONSE()
         
         queryset = Posting.get_posting_list(category, limit)
         serializer = PostingSerializer(queryset, many=True)
