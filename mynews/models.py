@@ -65,6 +65,100 @@ class Article(models.Model):
             recommended_articles = recommended_articles + additional_articles
 
         return recommended_articles
+    
+    @classmethod
+    def get_my_favorite_category(cls, user_id: int) -> dict:
+        # 사용자가 좋아요를 누른 기사들의 카테고리별 개수를 집계
+        category_counts = (
+            cls.objects.filter(
+                userarticleinteraction__user_id=user_id,
+                userarticleinteraction__interaction_type=ArticleInteractionType.LIKE
+            )
+            .values('category')
+            .annotate(count=models.Count('category'))
+            .order_by('-count')
+        )
+
+        # 딕셔너리 형태로 변환
+        result = {}
+        for item in category_counts:
+            category_name = ArticleCategory(item['category']).name
+            result[category_name] = item['count']
+
+        return result
+    
+    @classmethod
+    def get_my_favorite_key_word(cls, user_id: int) -> dict:
+        # 사용자가 좋아요를 누른 기사들의 키워드를 모두 가져옴
+        liked_articles = cls.objects.filter(
+            userarticleinteraction__user_id=user_id,
+            userarticleinteraction__interaction_type=ArticleInteractionType.LIKE
+        )
+
+        # 모든 키워드를 하나의 리스트로 합침
+        all_keywords = []
+        for article in liked_articles:
+            all_keywords.extend(article.keywords)
+
+        # 키워드별 등장 횟수를 계산
+        keyword_counts = {}
+        for keyword in all_keywords:
+            if keyword in keyword_counts:
+                keyword_counts[keyword] += 1
+            else:
+                keyword_counts[keyword] = 1
+
+        # 등장 횟수가 많은 순으로 정렬하여 상위 5개 추출
+        sorted_keywords = dict(sorted(keyword_counts.items(), key=lambda x: x[1], reverse=True)[:5])
+
+        return sorted_keywords
+    
+    @classmethod
+    def get_number_of_written_articles(cls, user_id: int) -> dict:
+        # 현재 날짜와 7일 전 날짜를 계산
+        end_date = datetime.datetime.now().date()
+        start_date = end_date - datetime.timedelta(days=6)
+        
+        # 날짜별 기사 읽은 수를 집계
+        daily_counts = (
+            cls.objects.filter(
+                userarticleinteraction__user_id=user_id,
+                userarticleinteraction__interaction_type=ArticleInteractionType.READ,
+                write_date__date__range=(start_date, end_date)
+            )
+            .annotate(date=models.functions.TruncDate('write_date'))
+            .values('date')
+            .annotate(count=models.Count('id'))
+            .order_by('date')
+        )
+        
+        # 결과를 딕셔너리로 변환
+        result = {}
+        current_date = start_date
+        
+        # 모든 날짜에 대해 0으로 초기화
+        while current_date <= end_date:
+            result[current_date.strftime('%Y-%m-%d')] = 0
+            current_date += datetime.timedelta(days=1)
+            
+        # 실제 데이터로 업데이트
+        for item in daily_counts:
+            date_str = item['date'].strftime('%Y-%m-%d')
+            result[date_str] = item['count']
+            
+        return result
+    
+    @classmethod
+    def get_favorite_articles(cls, user_id: int) -> List[dict]:
+        # 사용자가 좋아요를 누른 기사들을 interaction_date 순으로 최대 10개 조회
+        liked_articles = cls.objects.filter(
+            userarticleinteraction__user_id=user_id,
+            userarticleinteraction__interaction_type=ArticleInteractionType.LIKE
+        ).order_by('-userarticleinteraction__interaction_date')[:10]
+
+        # id, title, writer, write_date 만 조회
+        return list(liked_articles.values('id', 'title', 'writer', 'write_date'))
+
 
     @classmethod
     def post_article(
@@ -144,7 +238,20 @@ class UserArticleInteraction(models.Model):
         )
 
         return interaction
-
+    
+    @classmethod
+    def create_read(cls, user, article) -> "UserArticleInteraction":
+        """
+        사용자가 기사를 읽을 때 새로운 상호작용을 생성합니다.
+        """
+        interaction = cls.objects.create(
+            user=user,
+            article=article,
+            interaction_type=ArticleInteractionType.READ,
+            interaction_date=datetime.datetime.now(),
+        )
+        return interaction
+    
     @classmethod
     def delete_like(cls, user, article) -> None:
         cls.objects.filter(

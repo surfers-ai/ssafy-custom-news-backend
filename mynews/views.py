@@ -2,7 +2,6 @@ from django.http import JsonResponse
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from mynews.enums import ArticleInteractionType
 from mynews.models import Article, UserArticleInteraction
 from mynews.serializers.dto.article_like_request_serializer import ArticleLikeSerializer
 from mynews.serializers.dto.article_response_serializer import ArticleResponseSerializer
@@ -16,8 +15,7 @@ from mynews.serializers.dto.write_article_request_serializer import (
 from rest_framework import status
 from langchain.prompts import PromptTemplate
 
-from mynews.mocking import dashboard_mock
-
+from mynews.serializers.dto.dashboard_response_serializer import DashboardResponseSerializer
 from openai import OpenAI
 from dotenv import load_dotenv
 
@@ -160,7 +158,7 @@ class ChatbotView(APIView):
             .message.content
         )
 
-        return SUCCESS_RESPONSE("호출 성공", {"history": completion})
+        return SUCCESS_RESPONSE("호출 성공", {"response": completion})
 
 
 class DashboardView(APIView):
@@ -169,8 +167,23 @@ class DashboardView(APIView):
         if not request.user.is_authenticated:
             return UNAUTHORIZED_RESPONSE()
         
-        return SUCCESS_RESPONSE("호출 성공", dashboard_mock)
+        my_favorite_category = Article.get_my_favorite_category(request.user.id)
+        my_favorite_key_word = Article.get_my_favorite_key_word(request.user.id)
+        number_of_written_articles = Article.get_number_of_written_articles(request.user.id)
+        favorite_articles = Article.get_favorite_articles(request.user.id)
 
+        print("favorite_articles", favorite_articles)
+        
+        serializer = DashboardResponseSerializer(data={
+            "my_favorite_category": my_favorite_category,
+            "my_favorite_key_word": my_favorite_key_word,
+            "number_of_written_articles": number_of_written_articles,
+            "favorite_articles": favorite_articles,
+        })
+
+        serializer.is_valid(raise_exception=True)
+
+        return SUCCESS_RESPONSE("유저의 취향을 시각화한 대시보드입니다.", serializer.data)
 
 class LikeArticleView(APIView):
     def post(self, request: Request) -> Response:
