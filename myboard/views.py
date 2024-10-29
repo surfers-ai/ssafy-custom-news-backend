@@ -22,16 +22,19 @@ class BoardListView(APIView):
         # 비로그인 상태
         if not request.user.is_authenticated:
             return UNAUTHORIZED_RESPONSE()
-        # 로그인 상태
-        else:
-            queryset = Posting.get_posting_list(category, limit)
-            serializer = PostingSerializer(queryset, many=True)
+        
+        queryset = Posting.get_posting_list(category, limit)
+        serializer = PostingSerializer(queryset, many=True)
 
-            return SUCCESS_RESPONSE("호출 성공, 로그인 상태", serializer.data)
+        return SUCCESS_RESPONSE("호출 성공, 로그인 상태", serializer.data)
         
 
 class PostingView(APIView):
     def get(self, request: Request, posting_id: int):
+        # 비로그인 상태
+        if not request.user.is_authenticated:
+            return UNAUTHORIZED_RESPONSE()
+        
         try:
             posting = Posting.objects.get(id=posting_id)
             serializer = PostingResponseSerializer(posting)
@@ -42,6 +45,10 @@ class PostingView(APIView):
 
 class WritePostingView(APIView):
     def post(self, request: Request) -> Response:
+        # 비로그인 상태
+        if not request.user.is_authenticated:
+            return UNAUTHORIZED_RESPONSE()
+        
         serializer = WritePostingRequestSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
@@ -57,6 +64,10 @@ class WritePostingView(APIView):
 
 class WriteCommentView(APIView):
     def post(self, request: Request, posting_id: int) -> Response:
+        # 비로그인 상태
+        if not request.user.is_authenticated:
+            return UNAUTHORIZED_RESPONSE()
+        
         serializer = WriteCommentRequestSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 

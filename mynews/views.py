@@ -21,7 +21,7 @@ from mynews.mocking import dashboard_mock
 from openai import OpenAI
 from dotenv import load_dotenv
 
-from myproject.response import SUCCESS_RESPONSE
+from myproject.response import SUCCESS_RESPONSE, UNAUTHORIZED_RESPONSE
 
 load_dotenv()
 
@@ -52,6 +52,10 @@ class NewsListView(APIView):
 
 class ArticleView(APIView):
     def get(self, request: Request, article_id: int) -> JsonResponse:
+        # 비로그인 상태
+        if not request.user.is_authenticated:
+            return UNAUTHORIZED_RESPONSE()
+        
         try:
             article = Article.objects.get(id=article_id)
 
@@ -95,6 +99,10 @@ class ChatbotView(APIView):
     client = OpenAI()
 
     def post(self, request: Request) -> JsonResponse:
+        # 비로그인 상태
+        if not request.user.is_authenticated:
+            return UNAUTHORIZED_RESPONSE()
+        
         serializer = ChatbotRequestSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
@@ -157,11 +165,19 @@ class ChatbotView(APIView):
 
 class DashboardView(APIView):
     def get(self, request: Request) -> JsonResponse:
+        # 비로그인 상태
+        if not request.user.is_authenticated:
+            return UNAUTHORIZED_RESPONSE()
+        
         return SUCCESS_RESPONSE("호출 성공", dashboard_mock)
 
 
 class LikeArticleView(APIView):
     def post(self, request: Request) -> Response:
+        # 비로그인 상태
+        if not request.user.is_authenticated:
+            return UNAUTHORIZED_RESPONSE()
+        
         # 요청 데이터 유효성 검사
         serializer = ArticleLikeSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -173,10 +189,6 @@ class LikeArticleView(APIView):
         article = self.get_article(article_id)
         if not article:
             return self.article_not_found_response()
-
-        # 사용자 인증 확인
-        if not request.user.is_authenticated:
-            return self.unauthorized_response()
 
         if UserArticleInteraction.is_liked_by_user(request.user, article):
             return self.like_already_exists_response()
@@ -191,6 +203,10 @@ class LikeArticleView(APIView):
             return self.like_already_exists_response()
 
     def delete(self, request: Request) -> Response:
+        # 비로그인 상태
+        if not request.user.is_authenticated:
+            return UNAUTHORIZED_RESPONSE()
+        
         # 요청 데이터 유효성 검사
         serializer = ArticleLikeSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -203,9 +219,6 @@ class LikeArticleView(APIView):
         if not article:
             return self.article_not_found_response()
 
-        # 사용자 인증 확인
-        if not request.user.is_authenticated:
-            return self.unauthorized_response()
 
         if not UserArticleInteraction.is_liked_by_user(request.user, article):
             return self.like_not_found_response()
@@ -214,9 +227,9 @@ class LikeArticleView(APIView):
         return self.like_canceled_response()
     
     def get(self, request: Request) -> Response:
-        # 해당 ID의 좋아요를 눌렀는지 확인
+        # 비로그인 상태
         if not request.user.is_authenticated:
-            return self.unauthorized_response()
+            return UNAUTHORIZED_RESPONSE()
 
         serializer = ArticleLikeSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -243,11 +256,6 @@ class LikeArticleView(APIView):
         return Response(
             {"message": "해당 기사를 찾을 수 없습니다."},
             status=status.HTTP_404_NOT_FOUND,
-        )
-
-    def unauthorized_response(self):
-        return Response(
-            {"message": "로그인이 필요합니다."}, status=status.HTTP_401_UNAUTHORIZED
         )
 
     def like_canceled_response(self):
