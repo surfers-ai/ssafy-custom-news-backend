@@ -45,12 +45,14 @@ class Article(models.Model):
         avg_embedding = user_interactions.filter(interaction_type=ArticleInteractionType.LIKE).aggregate(Avg('article__embedding'))['article__embedding__avg']
 
         # 코사인 유사도가 높은 상위 기사 추출
+        liked_article_ids = UserArticleInteraction.objects.filter(user_id=user_id, interaction_type=ArticleInteractionType.LIKE).values_list('article_id', flat=True)
+        
         if category == ArticleCategory.전체:
-            recommended_articles = cls.objects.order_by(
+            recommended_articles = cls.objects.exclude(id__in=liked_article_ids).order_by(
                 CosineDistance('embedding', avg_embedding)
             )[:limit]
         else:
-            recommended_articles = cls.objects.filter(category=category).order_by(
+            recommended_articles = cls.objects.filter(category=category).exclude(id__in=liked_article_ids).order_by(
                 CosineDistance('embedding', avg_embedding)
             )[:limit]
 
