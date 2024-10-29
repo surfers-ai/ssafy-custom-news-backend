@@ -61,7 +61,7 @@ class Article(models.Model):
 
         if len(recommended_articles) < limit:
             # 추천된 기사가 limit보다 적으면 카테고리별 기사로 채움
-            additional_articles = cls.get_article_list(category, limit - len(recommended_articles))
+            additional_articles = list(cls.get_article_list(category, limit - len(recommended_articles)))
             recommended_articles = recommended_articles + additional_articles
 
         return recommended_articles
