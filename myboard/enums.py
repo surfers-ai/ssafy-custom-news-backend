@@ -2,7 +2,7 @@ from django.db import models
 
 class PostingCategory(models.TextChoices):
     전체 = "전체"
-    자유 = "자유"
-    질문 = "질문"
-    토론 = "토론"
+    자유게시판 = "자유게시판"
+    취업정보 = "취업정보"
+    자소서공유 = "자소서공유"
     정보 = "정보"
