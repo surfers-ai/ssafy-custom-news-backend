@@ -29,8 +29,10 @@ class Posting(models.Model):
     
     @classmethod
     def post_posting(cls, title: str, writer: User, category: PostingCategory, content: str, keywords: list[str]) -> int:
+        text = title + "\n" + content + "\n" + "\n".join(keywords)
+        embedding = cls.get_embedding(text)
+
         write_date = datetime.now()
-        embedding = cls.get_embedding(content)
 
         posting = cls.objects.create(
             title=title,
