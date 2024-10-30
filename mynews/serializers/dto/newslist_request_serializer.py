@@ -8,3 +8,6 @@ class NewslistRequestSerializer(serializers.Serializer):
         choices=ArticleCategory.choices, required=False, default=ArticleCategory.전체
     )
     limit = serializers.IntegerField(required=False, default=10)
+    sort_by = serializers.ChoiceField(
+        choices=["latest", "recommend"], required=False, default="latest"
+    )

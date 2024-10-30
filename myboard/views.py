@@ -22,7 +22,7 @@ class BoardListView(APIView):
         queryset = Posting.get_posting_list(category, limit)
         serializer = PostingSerializer(queryset, many=True)
 
-        return SUCCESS_RESPONSE("호출 성공, 로그인 상태", serializer.data)
+        return SUCCESS_RESPONSE("호출 성공, 로그인 상관 X", serializer.data)
         
 
 class PostingView(APIView):

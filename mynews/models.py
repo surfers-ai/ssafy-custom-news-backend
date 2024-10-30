@@ -26,13 +26,19 @@ class Article(models.Model):
 
     @classmethod
     def get_article_list(
-        cls, category: ArticleCategory, limit: int = 10
+        cls, category: ArticleCategory, limit: int = 10, sort_by: str = "latest"
     ) -> List["Article"]:
         print("category: ", category)
         if category == ArticleCategory.전체:
-            return cls.objects.order_by('?')[:limit]
+            if sort_by == "latest":
+                return cls.objects.order_by('?')[:limit]
+            else:
+                return cls.objects.order_by('-write_date')[:limit]
         else:
-            return cls.objects.filter(category=category).order_by('?')[:limit]
+            if sort_by == "latest":
+                return cls.objects.filter(category=category).order_by('?')[:limit]
+            else:
+                return cls.objects.filter(category=category).order_by('-write_date')[:limit]
         
     @classmethod
     def get_recommendation_article_list(cls, user_id: int, category: ArticleCategory, limit: int = 10) -> list["Article"]:
