@@ -33,16 +33,20 @@ class NewsListView(APIView):
 
         category = serializer.validated_data.get("category")
         limit = serializer.validated_data.get("limit")
+        sort_by = serializer.validated_data.get("sort_by", "latest") # 기본값은 최신순
 
         # 비로그인 상태
         if not request.user.is_authenticated:
-            queryset = Article.get_article_list(category, limit)
+            queryset = Article.get_article_list(category, limit, sort_by)
             serializer = ArticleSerializer(queryset, many=True)
 
             return SUCCESS_RESPONSE("호출 성공, 비로그인 상태", serializer.data)
         # 로그인 상태
         else:
-            queryset = Article.get_recommendation_article_list(request.user.id, category, limit)
+            if sort_by == "recommend":
+                queryset = Article.get_recommendation_article_list(request.user.id, category, limit)
+            else:
+                queryset = Article.get_article_list(category, limit, sort_by)
             serializer = ArticleSerializer(queryset, many=True)
 
             return SUCCESS_RESPONSE("호출 성공, 로그인 상태", serializer.data)
