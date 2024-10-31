@@ -7,6 +7,7 @@ from mynews.serializers.related_articles_serializer import RelatedArticlesSerial
 class PostingResponseSerializer(serializers.ModelSerializer):
     posting_comments = PostingCommentSerializer(source="*")
     related_articles = RelatedArticlesSerializer(source="*")
+    writer_username = serializers.CharField(source='writer.username')
 
     class Meta:
         model = Posting
