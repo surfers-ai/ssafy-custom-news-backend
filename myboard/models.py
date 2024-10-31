@@ -21,11 +21,18 @@ class Posting(models.Model):
     embedding = VectorField(dimensions=1536)
 
     @classmethod
-    def get_posting_list(cls, category: PostingCategory, limit: int) -> List['Posting']:
+    def get_posting_list(cls, category: PostingCategory, page: int = 1, limit: int = 10) -> tuple[List['Posting'], int]:
+        offset = (page - 1) * limit
+        
         if category == PostingCategory.전체:
-            return cls.objects.order_by("-write_date")[:limit]
+            queryset = cls.objects
         else:
-            return cls.objects.filter(category=category).order_by("-write_date")[:limit]
+            queryset = cls.objects.filter(category=category)
+        
+        total_count = queryset.count()
+        postings = queryset.order_by("-write_date")[offset:offset + limit]
+        
+        return postings, total_count
     
     @classmethod
     def post_posting(cls, title: str, writer: User, category: PostingCategory, content: str, keywords: list[str]) -> int:
