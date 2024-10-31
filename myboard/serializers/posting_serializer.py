@@ -6,6 +6,7 @@ from myboard.serializers.posting_comment_serializer import PostingCommentSeriali
 
 class PostingSerializer(serializers.ModelSerializer):
 
+    writer = serializers.CharField(source="writer.username", read_only=True)
     posting_comments = PostingCommentSerializer(source="*")
 
     class Meta:
