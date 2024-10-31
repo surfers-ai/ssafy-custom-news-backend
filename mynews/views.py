@@ -33,39 +33,38 @@ class NewsListView(APIView):
 
         category = serializer.validated_data.get("category")
         limit = serializer.validated_data.get("limit")
-        sort_by = serializer.validated_data.get("sort_by", "latest") # 기본값은 최신순
-        page = int(request.query_params.get('page', 1))
-        offset = (page - 1) * limit
+        page = serializer.validated_data.get("page")
+        sort_by = serializer.validated_data.get("sort_by", "latest")
 
-        # 비로그인 상태
         if not request.user.is_authenticated:
-            queryset = Article.get_article_list(category, limit, sort_by)
-            total_count = len(queryset)
-            paginated_queryset = queryset[offset:offset + limit]
-            serializer = ArticleSerializer(paginated_queryset, many=True)
-
+            articles, total_count = Article.get_article_list(category, page, limit, sort_by)
+            serializer = ArticleSerializer(articles, many=True)
+            
             return SUCCESS_RESPONSE("호출 성공, 비로그인 상태", {
                 "articles": serializer.data,
-                "total_count": total_count,
-                "current_page": page,
-                "total_pages": (total_count + limit - 1) // limit
+                "pagination": {
+                    "total_count": total_count,
+                    "total_pages": (total_count + limit - 1) // limit,
+                    "current_page": page,
+                    "limit": limit
+                }
             })
-        # 로그인 상태
         else:
             if sort_by == "recommend":
-                queryset = Article.get_recommendation_article_list(request.user.id, category, limit)
+                articles, total_count = Article.get_recommendation_article_list(request.user.id, category, page, limit)
             else:
-                queryset = Article.get_article_list(category, limit, sort_by)
+                articles, total_count = Article.get_article_list(category, page, limit, sort_by)
+                
+            serializer = ArticleSerializer(articles, many=True)
             
-            total_count = len(queryset)
-            paginated_queryset = queryset[offset:offset + limit]
-            serializer = ArticleSerializer(paginated_queryset, many=True)
-
             return SUCCESS_RESPONSE("호출 성공, 로그인 상태", {
                 "articles": serializer.data,
-                "total_count": total_count, 
-                "current_page": page,
-                "total_pages": (total_count + limit - 1) // limit
+                "pagination": {
+                    "total_count": total_count,
+                    "total_pages": (total_count + limit - 1) // limit,
+                    "current_page": page,
+                    "limit": limit
+                }
             })
 
 
@@ -270,7 +269,7 @@ class LikeArticleView(APIView):
         article_id = request.query_params.get('article_id')
         if not article_id:
             return Response(
-                {"message": "article_id는 필수 파라미터입니다."},
+                {"message": "article_id는 필수 파라���터입니다."},
                 status=status.HTTP_400_BAD_REQUEST
             )
 

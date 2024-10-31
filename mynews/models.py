@@ -26,51 +26,53 @@ class Article(models.Model):
 
     @classmethod
     def get_article_list(
-        cls, category: ArticleCategory, limit: int = 10, sort_by: str = "latest"
-    ) -> List["Article"]:
-        print("category: ", category)
-        if category == ArticleCategory.전체:
-            if sort_by == "latest":
-                return cls.objects.order_by('?')[:limit]
-            else:
-                return cls.objects.order_by('-write_date')[:limit]
-        else:
-            if sort_by == "latest":
-                return cls.objects.filter(category=category).order_by('?')[:limit]
-            else:
-                return cls.objects.filter(category=category).order_by('-write_date')[:limit]
+        cls, category: ArticleCategory, page: int = 1, limit: int = 10, sort_by: str = "latest"
+    ) -> tuple[List["Article"], int]:
+        offset = (page - 1) * limit
         
+        if category == ArticleCategory.전체:
+            queryset = cls.objects
+        else:
+            queryset = cls.objects.filter(category=category)
+        
+        total_count = queryset.count()
+        
+        if sort_by == "latest":
+            articles = queryset.order_by('-write_date')[offset:offset + limit]
+        else:
+            articles = queryset.order_by('?')[offset:offset + limit]
+        
+        return articles, total_count
+    
     @classmethod
-    def get_recommendation_article_list(cls, user_id: int, category: ArticleCategory, limit: int = 10) -> list["Article"]:
-        # 사용자의 평균 임베딩 계산
+    def get_recommendation_article_list(cls, user_id: int, category: ArticleCategory, page: int = 1, limit: int = 10) -> tuple[List["Article"], int]:
+        offset = (page - 1) * limit
+        
         user_interactions = UserArticleInteraction.objects.filter(user_id=user_id)
-
+        
         if not user_interactions.exists():
-            return cls.get_article_list(category, limit)  # 상호작용이 없으면 카테고리별 기사 반환
-
+            return cls.get_article_list(category, page, limit)
+        
         avg_embedding = user_interactions.filter(interaction_type=ArticleInteractionType.LIKE).aggregate(Avg('article__embedding'))['article__embedding__avg']
 
-        # 코사인 유사도가 높은 상위 기사 추출
         liked_article_ids = UserArticleInteraction.objects.filter(user_id=user_id, interaction_type=ArticleInteractionType.LIKE).values_list('article_id', flat=True)
         
         if category == ArticleCategory.전체:
-            recommended_articles = cls.objects.exclude(id__in=liked_article_ids).order_by(
-                CosineDistance('embedding', avg_embedding)
-            )[:limit]
+            queryset = cls.objects.exclude(id__in=liked_article_ids)
         else:
-            recommended_articles = cls.objects.filter(category=category).exclude(id__in=liked_article_ids).order_by(
-                CosineDistance('embedding', avg_embedding)
-            )[:limit]
+            queryset = cls.objects.filter(category=category).exclude(id__in=liked_article_ids)
+        
+        total_count = queryset.count()
+        
+        recommended_articles = queryset.order_by(
+            CosineDistance('embedding', avg_embedding)
+        )[offset:offset + limit]
 
+        # 추천 기사 목록을 랜덤하게 섞기
         recommended_articles = list(recommended_articles)
         random.shuffle(recommended_articles)
-
-        if len(recommended_articles) < limit:
-            # 추천된 기사가 limit보다 적으면 카테고리별 기사로 채움
-            additional_articles = list(cls.get_article_list(category, limit - len(recommended_articles)))
-            recommended_articles = recommended_articles + additional_articles
-
-        return recommended_articles
+        
+        return recommended_articles, total_count
     
     @classmethod
     def get_my_favorite_category(cls, user_id: int) -> dict:

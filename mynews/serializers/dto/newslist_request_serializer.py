@@ -11,3 +11,4 @@ class NewslistRequestSerializer(serializers.Serializer):
     sort_by = serializers.ChoiceField(
         choices=["latest", "recommend"], required=False, default="latest"
     )
+    page = serializers.IntegerField(required=False, default=1)
