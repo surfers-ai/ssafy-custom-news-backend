@@ -9,5 +9,5 @@ class PostingCommentSerializer(serializers.Serializer):
     comments = serializers.SerializerMethodField()
 
     def get_comments(self, obj: Posting) -> List[Comment]:
-        comments = Comment.objects.filter(posting_id=obj.id)
+        comments = Comment.objects.filter(posting_id=obj.id).select_related('writer')
         return CommentSerializer(comments, many=True).data
