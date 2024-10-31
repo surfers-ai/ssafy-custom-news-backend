@@ -18,11 +18,20 @@ class BoardListView(APIView):
 
         category = serializer.validated_data.get("category")
         limit = serializer.validated_data.get("limit")
+        page = serializer.validated_data.get("page")
         
-        queryset = Posting.get_posting_list(category, limit)
-        serializer = PostingSerializer(queryset, many=True)
+        postings, total_count = Posting.get_posting_list(category, page, limit)
+        serializer = PostingSerializer(postings, many=True)
 
-        return SUCCESS_RESPONSE("호출 성공, 로그인 상관 X", serializer.data)
+        return SUCCESS_RESPONSE("호출 성공, 로그인 상관 X", {
+            "postings": serializer.data,
+            "pagination": {
+                "total_count": total_count,
+                "total_pages": (total_count + limit - 1) // limit,
+                "current_page": page,
+                "limit": limit
+            }
+        })
         
 
 class PostingView(APIView):
