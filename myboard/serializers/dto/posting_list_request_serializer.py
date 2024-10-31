@@ -8,3 +8,4 @@ class PostingListRequestSerializer(serializers.Serializer):
         choices=PostingCategory.choices, required=False, default=PostingCategory.전체
     )
     limit = serializers.IntegerField(required=False, default=10)
+    page = serializers.IntegerField(required=False, default=1)
