@@ -16,8 +16,8 @@ class Article(models.Model):
     writer = models.CharField(max_length=255)
     write_date = models.DateTimeField()
     category = models.CharField(choices=ArticleCategory.choices)
-    content = models.TextField()
-    url = models.URLField(max_length=200)
+    content = models.TextField(unique=True)
+    url = models.URLField(max_length=200, unique=True)
     keywords = models.JSONField(default=list)
     embedding = VectorField(dimensions=1536)
 
@@ -234,7 +234,7 @@ class UserArticleInteraction(models.Model):
         사용자가 기사에 좋아요를 누를 때 새로운 상호작용을 생성합니다.
 
         매개변수:
-        - user: 좋아요를 누른 사용자 객체
+        - user: 좋아요를 누른 사��자 객체
         - article: 좋아요를 받은 기사 객체
 
         반환값:
