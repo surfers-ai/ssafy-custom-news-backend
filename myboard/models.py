@@ -16,7 +16,7 @@ class Posting(models.Model):
     writer = models.ForeignKey("auth.User", on_delete=models.CASCADE)
     write_date = models.DateTimeField()
     category = models.CharField(choices=PostingCategory.choices)
-    content = models.TextField()
+    content = models.TextField(unique=True)
     keywords = models.JSONField(default=list)
     embedding = VectorField(dimensions=1536)
 
@@ -35,7 +35,7 @@ class Posting(models.Model):
         return postings, total_count
     
     @classmethod
-    def post_posting(cls, title: str, writer: User, category: PostingCategory, content: str, keywords: list[str]) -> int:
+    def post_posting(cls, title: str, writer: User, category: PostingCategory, content: str, keywords: list[str]) -> int:            
         text = title + "\n" + content + "\n" + "\n".join(keywords)
         embedding = cls.get_embedding(text)
 
