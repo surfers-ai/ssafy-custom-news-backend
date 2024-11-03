@@ -30,7 +30,8 @@ sudo service postgresql status
 1. PostgreSQL 접속
 
 ```bash
-psql -U postgres
+sudo -i -u postgres
+psql
 ```
 
 2. 데이터베이스 생성
