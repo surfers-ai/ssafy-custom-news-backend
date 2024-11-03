@@ -16,7 +16,7 @@ class Posting(models.Model):
     writer = models.ForeignKey("auth.User", on_delete=models.CASCADE)
     write_date = models.DateTimeField()
     category = models.CharField(choices=PostingCategory.choices)
-    content = models.TextField(unique=True)
+    content = models.TextField()
     keywords = models.JSONField(default=list)
     embedding = VectorField(dimensions=1536)
 

@@ -212,16 +212,6 @@ class Article(models.Model):
         return article
 
 
-class Preference(models.Model):
-    """
-    User의 확장 모델 - 뉴스 추천을 위한 추가 정보 저장
-    기본 사용자 정보(이메일, 이름 등)는 auth_user 테이블 사용
-    """
-
-    user = models.OneToOneField("auth.User", on_delete=models.CASCADE)
-    user_embedding = VectorField(dimensions=1536)
-
-
 class UserArticleInteraction(models.Model):
     user = models.ForeignKey("auth.User", on_delete=models.CASCADE)
     article = models.ForeignKey(Article, on_delete=models.CASCADE)
