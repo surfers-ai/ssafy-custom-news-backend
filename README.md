@@ -37,14 +37,14 @@ psql
 2. 데이터베이스 생성
 
 ```sql
-CREATE DATABASE ssafynews;
+CREATE DATABASE news;
 ```
 
 3. 사용자 생성 및 권한 부여
 
 ```sql
 CREATE USER ssafyuser WITH PASSWORD 'your_password';
-GRANT ALL PRIVILEGES ON DATABASE ssafynews TO ssafyuser;
+GRANT ALL PRIVILEGES ON DATABASE news TO ssafyuser;
 ```
 
 ### 프로젝트 설치
