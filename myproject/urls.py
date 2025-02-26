@@ -26,6 +26,7 @@ from mynews.views import (
     NewsListView,
     ArticleView,
     WriteArticleView,
+    SearchNewsView
 )
 
 urlpatterns = [
@@ -35,6 +36,7 @@ urlpatterns = [
     path("auth/", include("dj_rest_auth.urls")),
     path("auth/registration/", include("dj_rest_auth.registration.urls")),
     # news
+    path("news/search/", SearchNewsView.as_view()),
     path("news-list/", NewsListView.as_view()),
     path("news/<int:article_id>/", ArticleView.as_view()),
     path("write-article/", WriteArticleView.as_view()),

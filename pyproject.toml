@@ -21,6 +21,7 @@ openai = "^1.52.2"
 python-dotenv = "^1.0.1"
 langchain = "^0.3.4"
 pgvector = "^0.3.6"
+elasticsearch = "^8.17.1"
 
 [tool.poetry.group.dev.dependencies]
 django-stubs = "^5.1.0"
