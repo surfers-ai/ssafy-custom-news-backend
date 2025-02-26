@@ -343,8 +343,10 @@ class SearchNewsView(APIView):
 
         es = Elasticsearch("http://localhost:9200")
         search_result = es.search(index="news", query={
-            "wildcard": {
-                "title": f"*{q}*"
+            "multi_match" : {
+            "query": q,
+            "type": "best_fields",
+            "fields": ["title", "content", "writer"],
             }
         })
 
