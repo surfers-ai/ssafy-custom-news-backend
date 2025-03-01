@@ -7,6 +7,7 @@ from rest_framework import status
 from langchain.prompts import PromptTemplate
 from openai import OpenAI
 from dotenv import load_dotenv
+import os
 
 from elasticsearch import Elasticsearch
 
@@ -341,12 +342,15 @@ class SearchNewsView(APIView):
 
         q = requestSerializer.validated_data.get("q")
 
-        es = Elasticsearch("http://localhost:9200")
+        es = Elasticsearch(os.getenv("ES_URL"))
         search_result = es.search(index="news", query={
-            "multi_match" : {
-            "query": q,
-            "type": "best_fields",
-            "fields": ["title", "content", "writer"],
+            "bool": {
+                "should": [
+                    {"wildcard": {"title": f"*{q}*"}},
+                    {"wildcard": {"content": f"*{q}*"}},
+                    {"wildcard": {"writer": f"*{q}*"}}
+                ],
+                "minimum_should_match": 1
             }
         })
 
