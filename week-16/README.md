@@ -78,3 +78,19 @@ poetry run python manage.py migrate
 ```bash
 poetry run bash start.sh
 ```
+
+<img width="1145" alt="image" src="https://github.com/user-attachments/assets/a4f3a605-8232-4581-860e-a350417454b2" />
+
+### 2.3. 로그 확인
+/log 폴더의 access.log, error.log 파일에서 백엔드 요청 로그를 확인합니다.
+
+access.log
+
+<img width="1382" alt="image" src="https://github.com/user-attachments/assets/723db3e2-69b6-49f5-9595-3f448948e105" />
+
+error.log
+
+<img width="860" alt="image" src="https://github.com/user-attachments/assets/2007404a-6b73-42be-b6bf-b4cdccf3bd72" />
+
+
+
