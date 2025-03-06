@@ -1,6 +1,6 @@
 from django.apps import AppConfig
 
 
-class MyboardConfig(AppConfig):
+class MynewsConfig(AppConfig):
     default_auto_field = "django.db.models.BigAutoField"
-    name = "myboard"
+    name = "mynews"
