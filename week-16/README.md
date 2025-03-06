@@ -73,7 +73,7 @@ poetry run python manage.py migrate
 
 ### 2.2. 서비스 실행
 
-아래 명령어 실행 후 http://localhost:9000 에 접속해 정상동작 하는지 확인합니다.
+아래 명령어 실행 후 http://localhost:8000 에 접속해 정상동작 하는지 확인합니다.
 
 ```bash
 poetry run bash start.sh

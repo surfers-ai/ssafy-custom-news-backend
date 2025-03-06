@@ -19,13 +19,11 @@ from django.contrib import admin
 from django.urls import include, path
 
 from mynews.views import (
-    ChatbotView,
     DashboardView,
     LikeArticleView,
     NewsListView,
     ArticleView,
     WriteArticleView,
-    SearchNewsView,
 )
 
 urlpatterns = [
