@@ -18,7 +18,6 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import include, path
 
-from myboard.views import BoardListView, PostingView, WriteCommentView, WritePostingView
 from mynews.views import (
     ChatbotView,
     DashboardView,
@@ -26,7 +25,7 @@ from mynews.views import (
     NewsListView,
     ArticleView,
     WriteArticleView,
-    SearchNewsView
+    SearchNewsView,
 )
 
 urlpatterns = [
@@ -46,10 +45,4 @@ urlpatterns = [
     path("dashboard/", DashboardView.as_view()),
     # chat with news
     path("news/chat/", ChatbotView.as_view()),
-
-    # board
-    path("board-list/", BoardListView.as_view()),
-    path("board/<int:posting_id>/", PostingView.as_view()),
-    path("write-posting/", WritePostingView.as_view()),
-    path("write-comment/<int:posting_id>/", WriteCommentView.as_view()),
 ]

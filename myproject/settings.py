@@ -35,10 +35,6 @@ CORS_ALLOW_ALL_ORIGINS = True
 INSTALLED_APPS = [
     # mynews
     "mynews.apps.MynewsConfig",
-
-    # myboard
-    "myboard.apps.MyboardConfig",
-
     # django
     "django.contrib.admin",
     "django.contrib.auth",
