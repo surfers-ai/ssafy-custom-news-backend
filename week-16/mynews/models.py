@@ -48,44 +48,6 @@ class Article(models.Model):
         return articles, total_count
 
     @classmethod
-    def get_recommendation_article_list(
-        cls, user_id: int, category: ArticleCategory, page: int = 1, limit: int = 10
-    ) -> tuple[List["Article"], int]:
-        offset = (page - 1) * limit
-
-        user_interactions = UserArticleInteraction.objects.filter(user_id=user_id)
-
-        if not user_interactions.exists():
-            return cls.get_article_list(category, page, limit)
-
-        avg_embedding = user_interactions.filter(
-            interaction_type=ArticleInteractionType.LIKE
-        ).aggregate(Avg("article__embedding"))["article__embedding__avg"]
-
-        liked_article_ids = UserArticleInteraction.objects.filter(
-            user_id=user_id, interaction_type=ArticleInteractionType.LIKE
-        ).values_list("article_id", flat=True)
-
-        if category == ArticleCategory.전체:
-            queryset = cls.objects.exclude(id__in=liked_article_ids)
-        else:
-            queryset = cls.objects.filter(category=category).exclude(
-                id__in=liked_article_ids
-            )
-
-        total_count = queryset.count()
-
-        recommended_articles = queryset.order_by(
-            CosineDistance("embedding", avg_embedding)
-        )[offset : offset + limit]
-
-        # 추천 기사 목록을 랜덤하게 섞기
-        recommended_articles = list(recommended_articles)
-        random.shuffle(recommended_articles)
-
-        return recommended_articles, total_count
-
-    @classmethod
     def get_my_favorite_category(cls, user_id: int) -> dict:
         # 사용자가 좋아요를 누른 기사들의 카테고리별 개수를 집계
         category_counts = (
