@@ -18,7 +18,6 @@ from mynews.serializers.dto.newslist_request_serializer import NewslistRequestSe
 from mynews.serializers.dto.news_search_request_serializer import NewsSearchRequestSerializer
 from mynews.serializers.dto.news_search_response_serializer import NewsSearchResponseSerializer
 from mynews.serializers.article_serializer import ArticleSerializer
-from mynews.serializers.dto.chatbot_request_serializer import ChatbotRequestSerializer
 from mynews.serializers.dto.write_article_request_serializer import (
     WriteArticleRequestSerializer,
 )
@@ -118,72 +117,6 @@ class WriteArticleView(APIView):
             )
 
 
-class ChatbotView(APIView):
-    client = OpenAI()
-
-    def post(self, request: Request) -> JsonResponse:
-        # 비로그인 상태
-        if not request.user.is_authenticated:
-            return UNAUTHORIZED_RESPONSE()
-        
-        serializer = ChatbotRequestSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-
-        article_id = serializer.validated_data["article_id"]
-        question = serializer.validated_data["question"]
-
-        print(article_id, question)
-
-        try:
-            article = Article.objects.get(id=article_id)
-            title = article.title
-            content = article.content
-            write_date = article.write_date
-        except Article.DoesNotExist:
-            return Response(
-                {"message": "해당 기사를 찾을 수 없습니다."},
-                status=status.HTTP_404_NOT_FOUND,
-            )
-
-        # 템플릿 정의
-        rag_tempalte = """너는 친절한 뉴스 비서 <뉴비>야. 뉴비는 News(뉴스) + 비서의 합성어로, 초보(newbie)라는 중의적인 의미도 갖고 있어.
-- 친근하고 상냥한 비서처럼 행동하면서, 주어진 뉴스 기사를 바탕으로 사용자의 질문에 아주 쉽고 친절하게 답해줘야 해.
-- 뉴스 기사에서 찾을 수 없는 정보는 "죄송해요, 여기 보고계신 기사에서는 찾을 수 없네요ㅎㅎ"라고 답해줘.
-
-사용자가 지금 보고 있는 뉴스를 참고해서 답변할 수 있는 질문에는 친절하게 답해줘.
-
-### 기사 제목: {title}
-
-### 작성일: {write_date}
-
-### 기사 내용:
-{content}
-"""
-
-        # PromptTemplate 생성
-        rag_article_prompt = PromptTemplate(
-            input_variables=["title", "write_date", "content"],
-            template=rag_tempalte,
-        )
-
-        # 템플릿에 변수 적용
-        context = rag_article_prompt.format(
-            title=title, write_date=write_date, content=content
-        )
-
-        completion = (
-            self.client.chat.completions.create(
-                model="gpt-4o-mini",
-                messages=[
-                    {"role": "system", "content": context},
-                    {"role": "user", "content": question},
-                ],
-            )
-            .choices[0]
-            .message.content
-        )
-
-        return SUCCESS_RESPONSE("호출 성공", {"response": completion})
 
 
 class DashboardView(APIView):
