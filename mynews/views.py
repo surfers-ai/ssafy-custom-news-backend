@@ -9,14 +9,10 @@ from openai import OpenAI
 from dotenv import load_dotenv
 import os
 
-from elasticsearch import Elasticsearch
-
 from mynews.models import Article, UserArticleInteraction
 from mynews.serializers.dto.article_like_request_serializer import ArticleLikeSerializer
 from mynews.serializers.dto.article_response_serializer import ArticleResponseSerializer
 from mynews.serializers.dto.newslist_request_serializer import NewslistRequestSerializer
-from mynews.serializers.dto.news_search_request_serializer import NewsSearchRequestSerializer
-from mynews.serializers.dto.news_search_response_serializer import NewsSearchResponseSerializer
 from mynews.serializers.article_serializer import ArticleSerializer
 from mynews.serializers.dto.write_article_request_serializer import (
     WriteArticleRequestSerializer,
@@ -266,31 +262,3 @@ class LikeArticleView(APIView):
             {"message": "이미 좋아요를 누른 기사입니다."},
             status=status.HTTP_400_BAD_REQUEST,
         )
-
-class SearchNewsView(APIView):
-    def get(self, request: Request) -> JsonResponse:
-        
-        requestSerializer = NewsSearchRequestSerializer(data=request.query_params)
-        requestSerializer.is_valid(raise_exception=True)
-
-        q = requestSerializer.validated_data.get("q")
-
-        es = Elasticsearch(os.getenv("ES_URL"))
-        search_result = es.search(index="news", query={
-            "bool": {
-                "should": [
-                    {"wildcard": {"title": f"*{q}*"}},
-                    {"wildcard": {"content": f"*{q}*"}},
-                    {"wildcard": {"writer": f"*{q}*"}}
-                ],
-                "minimum_should_match": 1
-            }
-        })
-
-        # Elastic 검색 결과 중 데이터 부분만 추출해 배열로 변환
-        articles = [hit['_source'] for hit in search_result['hits']['hits']]
-        print(articles)
-        responseSerializer = NewsSearchResponseSerializer(articles , many=True)
-
-
-        return SUCCESS_RESPONSE(f"{q} 에 대한 검색 결과입니다", responseSerializer.data)
