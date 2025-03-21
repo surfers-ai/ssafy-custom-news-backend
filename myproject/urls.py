@@ -18,26 +18,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import include, path
 
-from mynews.views import (
-    DashboardView,
-    LikeArticleView,
-    NewsListView,
-    ArticleView,
-    WriteArticleView,
-)
-
 urlpatterns = [
     path("health-check/", include("health_check.urls")),
     path("admin/", admin.site.urls),
-    # auth
-    path("auth/", include("dj_rest_auth.urls")),
-    path("auth/registration/", include("dj_rest_auth.registration.urls")),
-    # news
-    path("news-list/", NewsListView.as_view()),
-    path("news/<int:article_id>/", ArticleView.as_view()),
-    path("write-article/", WriteArticleView.as_view()),
-    # like article
-    path("news/like/", LikeArticleView.as_view()),
-    # dashboard
-    path("dashboard/", DashboardView.as_view()),
 ]
