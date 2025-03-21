@@ -49,11 +49,7 @@ class NewsListView(APIView):
                 }
             })
         else:
-            if sort_by == "recommend":
-                articles, total_count = Article.get_recommendation_article_list(request.user.id, category, page, limit)
-            else:
-                articles, total_count = Article.get_article_list(category, page, limit, sort_by)
-                
+            articles, total_count = Article.get_article_list(category, page, limit, sort_by)
             serializer = ArticleSerializer(articles, many=True)
             
             return SUCCESS_RESPONSE("호출 성공, 로그인 상태", {
